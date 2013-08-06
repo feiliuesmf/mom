@@ -1,6 +1,7 @@
 #! /bin/sh
 
 rm STDIN.*
+dir=$(pwd)
 
 qsub << EOF
 #!/bin/csh
@@ -26,7 +27,7 @@ echo "LD_LIBRARY_PATY: $LD_LIBRARY_PATH"
 echo ""
 
 #run the executable
-cd /home/Fei.Liu/MOM5/mom-5.0.2/exp
+cd $dir
 ./MOM_run.csh --platform zeus --type MOM_solo --experiment box1 --npes 8 --download_input_data
 
 EOF

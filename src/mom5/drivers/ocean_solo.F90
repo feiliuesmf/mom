@@ -134,7 +134,7 @@ module time_utils_mod
     type(Time_type), intent(in)        :: time
     type(ESMF_CALKIND_FLAG), intent(in), optional :: calkind
     ! Local Variables
-    integer                            :: yy, mm, d, h, m, s
+    integer                            :: yy, mm, d, h, m, s, tick
     type(ESMF_CALKIND_FLAG)            :: l_calkind
 
     integer                            :: rc
@@ -145,7 +145,7 @@ module time_utils_mod
       l_calkind = fms2esmf_cal(fms_get_calendar_type())
     endif
 
-    call get_date(time, yy, mm, d, h, m, s)
+    call get_date(time, yy, mm, d, h, m, s, tick=tick)
 
     call ESMF_TimeSet(fms2esmf_time, yy=yy, mm=mm, d=d, h=h, m=m, s=s, &
         calkindflag=l_calkind, rc=rc)
