@@ -3,7 +3,7 @@
 rm STDIN.*
 dir=$(pwd)
 
-qsub << EOF
+msub << EOF
 #!/bin/csh
 #
 ## LSF batch script to run an MPI application
@@ -28,6 +28,6 @@ echo ""
 
 #run the executable
 cd $dir
-./MOM_run.csh --platform zeus --type MOM_solo --experiment box1 --npes 8 --download_input_data
+./MOM_run.csh --platform ncrc2.intel --type MOM_solo --experiment box1 --npes 8 --download_input_data
 
 EOF

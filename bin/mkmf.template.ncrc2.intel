@@ -89,6 +89,18 @@ else
   LIBS += -lnetcdf
 endif
 
+# conditional compilation and linking with ESMF
+ifdef ESMFMKFILE
+  ifneq ($(ESMFMKFILE),)
+    include $(ESMFMKFILE)
+    FFLAGS += $(ESMF_F90COMPILEPATHS) -g -O0 -DUSE_ESMF_LIB
+    CFLAGS += $(ESMF_CXXCOMPILEPATHS) -g -O0
+    LIBS   += $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) $(ESMF_F90ESMFLINKLIBS)
+  endif
+endif
+
+LIBS += 
+LDFLAGS += $(LIBS)
 LIBS += 
 LDFLAGS += $(LIBS)
 

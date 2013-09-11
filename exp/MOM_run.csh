@@ -217,7 +217,7 @@ endif
 if ( $name  == mom4p1_ebm1 & $npes != 17) then
     set valid_npes = 17
 endif
-set runCommand = "$mpirunCommand -np $npes $executable >fms.out"
+set runCommand = "$mpirunCommand $npes $executable >fms.out"
 echo "About to run the command $runCommand"
 
 if ( $valid_npes ) then
