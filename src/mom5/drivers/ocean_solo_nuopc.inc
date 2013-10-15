@@ -158,12 +158,13 @@ module time_utils_mod
     character(len=15), intent(in)           :: string
     integer, intent(out), optional          :: rc
     type(time_type)                         :: string_to_date
-
+    
+    character(len=1)                        :: dot
     integer                                 :: yr,mon,day,hr,min,sec
     
     if(present(rc)) rc = ESMF_SUCCESS
 
-    read(string, '(I4.4,I2.2,I2.2,".",I2.2,I2.2,I2.2)') yr, mon, day, hr, min, sec
+    read(string, '(I4.4,I2.2,I2.2, a, I2.2,I2.2,I2.2)') yr, mon, day, dot, hr, min, sec
     string_to_date = set_date(yr, mon, day, hr, min, sec)
 
   end function string_to_date
