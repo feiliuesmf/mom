@@ -1,9 +1,12 @@
 #! /bin/sh
 
 rm STDIN.*
-dir=$(pwd)
+rm -rf ../work/box1/RESTART/                                         
+rm -rf ../work/box1/input.nml
+cp ../work/box1/INPUT/ocean_hgrid.nc ../work/box1  
+cp ../work/box1/INPUT/grid_spec.nc ../work/box1  
 
-msub << EOF
+qsub << EOF
 #!/bin/csh
 #
 ## LSF batch script to run an MPI application
@@ -12,7 +15,7 @@ msub << EOF
 #BSUB -o myjob.%J.out          # output file name in which %J is replaced by the job ID
 #BSUB -e myjob.%J.err          # error file name in which %J is replaced by the job ID
 #BSUB -q batch                 # queue
-#PBS -l procs=8
+#PBS -l procs=24
 #PBS -l walltime=00:10:00
 #PBS -A esmf
 #PBS -d .
@@ -27,7 +30,7 @@ echo "LD_LIBRARY_PATY: $LD_LIBRARY_PATH"
 echo ""
 
 #run the executable
-cd $dir
-./MOM_run.csh --platform ncrc2.intel --type MOM_solo --experiment box1 --npes 8 --download_input_data
+cd /home/Fei.Liu/github/mom/exp
+./MOM_run.csh --platform zeus --type MOM_solo --experiment box1 --npes 24 --download_input_data
 
 EOF

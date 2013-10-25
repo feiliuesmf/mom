@@ -788,6 +788,13 @@ module ocean_solo_mod
     integer :: restart_interval(6) = (/1,0,0,0,0,0/)
     type(ocean_internalstate_wrapper)      :: ocean_internalstate
 
+    logical, save     :: gridCreated = .false.
+    type(ESMF_Grid), save   :: grid
+    type(ESMF_Field)  :: field
+    integer           :: dimcount, tilecount, slc, ldecount, gridrank, clb(2), cub(2), elb(2), eub(2)
+    real(ESMF_KIND_R8), pointer :: fptr(:)
+    integer           :: stdoutunit
+
 
     rc = ESMF_SUCCESS
     
@@ -870,6 +877,69 @@ module ocean_solo_mod
     call external_coupler_sbc_before(Ice_ocean_boundary, Ocean_sfc, nc, dt_cpld )
 
     call update_ocean_model(Ice_ocean_boundary, Ocean_state, Ocean_sfc, Time, Time_step_coupled)
+
+    stdoutunit = stdout()
+    if(.not. gridCreated) then
+      !grid = ESMF_GridCreate('ocean_hgrid.nc', ESMF_FILEFORMAT_GRIDSPEC, &
+      grid = ESMF_GridCreate('grid_spec.nc', ESMF_FILEFORMAT_GRIDSPEC, &
+          (/6, 4/), isSphere=.true., coordNames=(/'gridlon_t', 'gridlat_t'/), &
+          addCornerStagger=.true., rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      gridCreated = .true.
+      write(stdoutunit, *) 'Created ESMF_Grid based on ocean_hgrid.nc'
+      call ESMF_GridGet(grid, dimCount=dimcount, tileCount=tileCount, localDeCount=ldecount, &
+        staggerlocCount=slc, rank=gridrank, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      write(stdoutunit, *) 'Properties of the Grid: dimcount, tilecount, localDeCount, staggerLocCount, rank', &
+        dimcount, tilecount, ldecount, slc, gridrank
+      call ESMF_GridGet(grid, ESMF_STAGGERLOC_CENTER, 0, &
+        exclusiveLBound=elb, exclusiveUBound=eub, &
+        computationalLBound=clb, computationalUBound=cub, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      write(stdoutunit, *) 'Properties of the Grid for center stagger on localDE: clb cub elb eub', clb, cub, elb, eub
+      call ESMF_GridGet(grid, ESMF_STAGGERLOC_CORNER, 0, &
+        exclusiveLBound=elb, exclusiveUBound=eub, &
+        computationalLBound=clb, computationalUBound=cub, rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      write(stdoutunit, *) 'Properties of the Grid for corner stagger on localDE: clb cub elb eub', clb, cub, elb, eub
+
+      call ESMF_GridGetCoord(grid, coordDim=1, staggerloc=ESMF_STAGGERLOC_CENTER, farrayPtr=fptr,rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      write(stdoutunit, *) 'Properties of the Grid Coord for center stagger on localDE: fptr', &
+        lbound(fptr), ubound(fptr), fptr
+
+      call ESMF_GridGetCoord(grid, coordDim=1, staggerloc=ESMF_STAGGERLOC_CORNER, farrayPtr=fptr,rc=rc)
+      if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+        line=__LINE__, &
+        file=__FILE__)) &
+        return  ! bail out
+      write(stdoutunit, *) 'Properties of the Grid Coord for corner stagger on localDE: fptr', &
+        lbound(fptr), ubound(fptr), fptr
+
+    endif
+   
+    write(stdoutunit, *) 'Properties of the t_surf pointer', lbound(Ocean_sfc%t_surf), ubound(Ocean_sfc%t_surf)
+    field = ESMF_FieldCreate(grid, Ocean_sfc%t_surf, rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
+      line=__LINE__, &
+      file=__FILE__)) &
+      return  ! bail out
+    write(stdoutunit, *) 'Created ESMF_Field based on Grid'
 
     Time = Time + Time_step_coupled
 
