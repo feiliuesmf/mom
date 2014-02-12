@@ -213,7 +213,7 @@ use mpp_mod,                  only: mpp_clock_id, mpp_clock_begin, mpp_clock_end
 use mpp_mod,                  only: CLOCK_COMPONENT, CLOCK_SUBCOMPONENT, CLOCK_MODULE, CLOCK_ROUTINE
 use stock_constants_mod,      only: ISTOCK_WATER, ISTOCK_HEAT, ISTOCK_SALT
 use time_interp_external_mod, only: time_interp_external_init
-use time_manager_mod,         only: JULIAN, get_date, get_time
+use time_manager_mod,         only: JULIAN, get_date, get_time, print_time
 use time_manager_mod,         only: time_type, operator( /= ), operator( < ), operator ( / )
 use time_manager_mod,         only: set_time, operator(-), operator( + ), operator( == )
 use time_manager_mod,         only: operator(*)
@@ -1320,13 +1320,18 @@ subroutine ocean_model_init(Ocean, Ocean_state, Time_init, Time_in)
     
     integer :: num_ocn
     integer :: taum1, tau, taup1
-    integer :: i, j, k, n
+    integer :: i, j, k, n, stdoutunit
+
+    stdoutunit = stdout()
 
     call mpp_clock_begin(id_ocean)
 
     if(first_ocn_call) then 
       num_ocean_calls =  Ocean_coupling_time_step / Time%Time_step 
       if ( num_ocean_calls * Time%Time_step /= Ocean_coupling_time_step ) then 
+       call print_time(Ocean_coupling_time_step, 'Ocn_cpl_time_step ocean_model_mod(update_ocean_model):', stdoutunit)
+       call print_time(Time%Time_step, 'Time_step ocean_model_mod(update_ocean_model):', stdoutunit)
+       write(*, *) 'number of ocean calls: ', num_ocean_calls
        call mpp_error(FATAL, &
        '==>Error from ocean_model_mod(update_ocean_model): cpld time step is not a multiple of the ocean time step', FATAL)
       endif
