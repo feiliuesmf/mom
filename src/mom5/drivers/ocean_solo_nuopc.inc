@@ -209,8 +209,7 @@ module ocean_solo_mod
   use ESMF
   use NUOPC
   use NUOPC_Model, only: &
-    model_routine_SS      => routine_SetServices, &
-    model_label_SetClock  => label_SetClock, &
+    model_routine_SS      => SetServices, &
     model_label_Advance   => label_Advance
 
   use time_utils_mod
@@ -242,21 +241,21 @@ module ocean_solo_mod
     rc = ESMF_SUCCESS
     
     ! the NUOPC model component will register the generic methods
-    call model_routine_SS(gcomp, rc=rc)
+    call NUOPC_CompDerive(gcomp, model_routine_SS, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
     
     ! set entry point for methods that require specific implementation
-    call ESMF_GridCompSetEntryPoint(gcomp, ESMF_METHOD_INITIALIZE, &
-      userRoutine=InitializeP1, phase=1, rc=rc)
+    call NUOPC_CompSetEntryPoint(gcomp, ESMF_METHOD_INITIALIZE, &
+      phaseLabelList=(/"IPDv00p1"/), userRoutine=InitializeP1, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
-    call ESMF_GridCompSetEntryPoint(gcomp, ESMF_METHOD_INITIALIZE, &
-      userRoutine=InitializeP2, phase=2, rc=rc)
+    call NUOPC_CompSetEntryPoint(gcomp, ESMF_METHOD_INITIALIZE, &
+      phaseLabelList=(/"IPDv00p2"/), userRoutine=InitializeP2, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
@@ -270,16 +269,8 @@ module ocean_solo_mod
       return  ! bail out
     
     ! attach specializing method(s)
-    ! No need to change clock settings
-    !call ESMF_MethodAdd(gcomp, label=model_label_SetClock, &
-    !  userRoutine=SetClock, rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-    !  line=__LINE__, &
-    !  file=__FILE__)) &
-    !  return  ! bail out
-    
-    call ESMF_MethodAdd(gcomp, label=model_label_Advance, &
-      userRoutine=ModelAdvance, rc=rc)
+    call NUOPC_CompSpecialize(gcomp, specLabel=model_label_Advance, &
+      specRoutine=ModelAdvance, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
@@ -360,32 +351,6 @@ module ocean_solo_mod
     allocate(ocean_internalstate%ptr)
     ocean_internalstate%ptr%ice_ocean_boundary_type_ptr => Ice_ocean_boundary
     ocean_internalstate%ptr%ocean_public_type_ptr       => Ocean_sfc
-
-    ! To start we have a dummy ocean that will not import or export anything.
-    !
-    !! importable field: air_pressure_at_sea_level
-    !call NUOPC_StateAdvertiseField(importState, &
-    !  StandardName="air_pressure_at_sea_level", rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-    !  line=__LINE__, &
-    !  file=__FILE__)) &
-    !  return  ! bail out
-    !
-    !! importable field: isotropic_shortwave_radiance_in_air
-    !call NUOPC_StateAdvertiseField(importState, &
-    !  StandardName="isotropic_shortwave_radiance_in_air", rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-    !  line=__LINE__, &
-    !  file=__FILE__)) &
-    !  return  ! bail out
-
-    ! exportable field: sea_surface_temperature
-    !call NUOPC_StateAdvertiseField(exportState, &
-    !  StandardName="sea_surface_temperature", rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-    !  line=__LINE__, &
-    !  file=__FILE__)) &
-    !  return  ! bail out
 
     !call external_coupler_mpi_init(mpi_comm_mom, external_initialization)
 
@@ -657,95 +622,11 @@ module ocean_solo_mod
     
     rc = ESMF_SUCCESS
 
-    ! To start we have a dummy ocean that will not import or export anything.
-    !
-    !! create a Grid object for Fields
-    !gridIn = NUOPC_GridCreateSimpleXY(10._ESMF_KIND_R8, 20._ESMF_KIND_R8, &
-    !  100._ESMF_KIND_R8, 200._ESMF_KIND_R8, 10, 100, rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-    !  line=__LINE__, &
-    !  file=__FILE__)) &
-    !  return  ! bail out
-    !gridOut = gridIn ! for now out same as in
-    !! importable field: air_pressure_at_sea_level
-    !field = ESMF_FieldCreate(name="pmsl", grid=gridIn, &
-    !  typekind=ESMF_TYPEKIND_R8, rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-    !  line=__LINE__, &
-    !  file=__FILE__)) &
-    !  return  ! bail out
-    !call NUOPC_StateRealizeField(importState, field=field, rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-    !  line=__LINE__, &
-    !  file=__FILE__)) &
-    !  return  ! bail out
-    !
-    !! importable field: isotropic_shortwave_radiance_in_air
-    !field = ESMF_FieldCreate(name="risw", grid=gridIn, &
-    !  typekind=ESMF_TYPEKIND_R8, rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-    !  line=__LINE__, &
-    !  file=__FILE__)) &
-    !  return  ! bail out
-    !call NUOPC_StateRealizeField(importState, field=field, rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-    !  line=__LINE__, &
-    !  file=__FILE__)) &
-    !  return  ! bail out
-
-    !! exportable field: sea_surface_temperature
-    !field = ESMF_FieldCreate(name="sst", grid=gridOut, &
-    !  typekind=ESMF_TYPEKIND_R8, rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-    !  line=__LINE__, &
-    !  file=__FILE__)) &
-    !  return  ! bail out
-    !call NUOPC_StateRealizeField(exportState, field=field, rc=rc)
-    !if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-    !  line=__LINE__, &
-    !  file=__FILE__)) &
-    !  return  ! bail out
+    
+    ! Solo ocean model does not import/export anything, it's self contained
 
   end subroutine
   
-  !-----------------------------------------------------------------------------
-
-  ! Ocean solo model uses same clock as parent gridComp
-  !subroutine SetClock(gcomp, rc)
-  !  type(ESMF_GridComp)  :: gcomp
-  !  integer, intent(out) :: rc
-  !  
-  !  ! local variables
-  !  type(ESMF_Clock)              :: clock
-  !  type(ESMF_TimeInterval)       :: stabilityTimeStep
-
-  !  rc = ESMF_SUCCESS
-  !  
-  !  ! query the Component for its clock, importState and exportState
-  !  call ESMF_GridCompGet(gcomp, clock=clock, rc=rc)
-  !  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-  !    line=__LINE__, &
-  !    file=__FILE__)) &
-  !    return  ! bail out
-  !    
-  !  ! initialize internal clock
-  !  ! here: parent Clock and stability timeStep determine actual model timeStep
-  !  !TODO: stabilityTimeStep should be read in from configuation
-  !  !TODO: or computed from internal Grid information
-  !  call ESMF_TimeIntervalSet(stabilityTimeStep, m=60, rc=rc) 
-  !  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-  !    line=__LINE__, &
-  !    file=__FILE__)) &
-  !    return  ! bail out
-  !  call NUOPC_GridCompSetClock(gcomp, clock, stabilityTimeStep, rc=rc)
-  !  if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-  !    line=__LINE__, &
-  !    file=__FILE__)) &
-  !    return  ! bail out
-
-  !  
-  !end subroutine
-
   !-----------------------------------------------------------------------------
 
   subroutine ModelAdvance(gcomp, rc)
@@ -1306,14 +1187,8 @@ module esm_mod
 
   use ESMF
   use NUOPC
-  use NUOPC_Driver, only: &
-    driver_routine_SS             => routine_SetServices, &
-    driver_type_IS                => type_InternalState, &
-    driver_label_IS               => label_InternalState, &
-    driver_setMC                  => label_SetModelCount, &
-#ifdef WITHPETLISTS
-    driver_label_SetModelPetLists => label_SetModelPetLists, &
-#endif
+  use NUOPC_Driver, &
+    driver_routine_SS             => SetServices, &
     driver_label_SetModelServices => label_SetModelServices
 
   use time_utils_mod
@@ -1329,38 +1204,22 @@ module esm_mod
   !-----------------------------------------------------------------------
   !------------------- Earth System Model code starts here ---------------
   !-----------------------------------------------------------------------
-  subroutine SetServices(gcomp, rc)
-    type(ESMF_GridComp)  :: gcomp
+  subroutine SetServices(driver, rc)
+    type(ESMF_GridComp)  :: driver
     integer, intent(out) :: rc
     
     rc = ESMF_SUCCESS
     
     ! NUOPC_Driver registers the generic methods
-    call driver_routine_SS(gcomp, rc=rc)
+    call NUOPC_CompDerive(driver, driver_routine_SS, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
       
     ! attach specializing method(s)
-#ifdef WITHPETLISTS
-    call ESMF_MethodAdd(gcomp, label=driver_label_SetModelPetLists, &
-      userRoutine=SetModelPetLists, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-#endif
-
-    call ESMF_MethodAdd(gcomp, label=driver_setMC, &
-        userRoutine=setModelCount, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-
-    call ESMF_MethodAdd(gcomp, label=driver_label_SetModelServices, &
-      userRoutine=SetModelServices, rc=rc)
+    call NUOPC_CompSpecialize(driver, specLabel=Driver_label_SetModelServices, &
+      specRoutine=SetModelServices, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
@@ -1370,74 +1229,13 @@ module esm_mod
 
   !-----------------------------------------------------------------------------
 
-#ifdef WITHPETLISTS
-
-  subroutine SetModelPetLists(gcomp, rc)
-    type(ESMF_GridComp)  :: gcomp
-    integer, intent(out) :: rc
+  subroutine SetModelServices(driver, rc)
+    type(ESMF_GridComp)           :: driver
+    integer, intent(out)          :: rc
     
     ! local variables
     integer                       :: localrc
-    type(driver_type_IS)          :: is
-    integer                       :: petCount, i
-
-    rc = ESMF_SUCCESS
-
-    ! query Component for its internal State
-    nullify(is%wrap)
-    call ESMF_UserCompGetInternalState(gcomp, driver_label_IS, is, rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-      
-    ! get the petCount
-    call ESMF_GridCompGet(gcomp, petCount=petCount, rc=rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-      
-    ! set petList for OCN -> second half of PETs
-    allocate(is%wrap%modelPetLists(petCount))
-    do i=0, petCount-1
-      is%wrap%modelPetLists(i) = i ! PET labeling goes from 0 to petCount-1
-    enddo
-
-  end subroutine
-#endif
-
-  subroutine setModelCount(gcomp, rc)
-    type(ESMF_GridComp)  :: gcomp
-    integer, intent(out) :: rc
-    
-    ! local variables
-    integer                       :: localrc
-    type(driver_type_IS)          :: is
-    integer                       :: petCount, i
-
-    rc = ESMF_SUCCESS
-
-    ! query Component for its internal State
-    nullify(is%wrap)
-    call ESMF_UserCompGetInternalState(gcomp, driver_label_IS, is, rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
-      
-    !Only ocean model exists
-    is%wrap%modelCount=1 
-
-  end subroutine
-
-  subroutine SetModelServices(gcomp, rc)
-    type(ESMF_GridComp)  :: gcomp
-    integer, intent(out) :: rc
-    
-    ! local variables
-    integer                       :: localrc
-    type(driver_type_IS)          :: is
+    type(ESMF_GridComp)           :: child
     type(ESMF_Grid)               :: grid
     type(ESMF_Field)              :: field
     type(ESMF_Time)               :: startTime
@@ -1477,24 +1275,17 @@ module esm_mod
 
     write(*,*) 'Time is', date_init(1), date_init(2), date_init(3), &
     date_init(4), date_init(5), date_init(6)
-    ! query Component for its internal State
-    nullify(is%wrap)
-    call ESMF_UserCompGetInternalState(gcomp, driver_label_IS, is, rc)
-    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
-      line=__LINE__, &
-      file=__FILE__)) &
-      return  ! bail out
       
     ! SetServices for OCN
-    call ESMF_GridCompSetServices(is%wrap%modelComp(1), ocean_solo_SS, userRc=localrc, rc=rc)
+    call NUOPC_DriverAddComp(driver, "OCN", ocean_solo_SS, comp=child, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
       return  ! bail out
-    if (ESMF_LogFoundError(rcToCheck=localrc, msg=ESMF_LOGERR_PASSTHRU, &
+    call NUOPC_CompAttributeSet(child, name="Verbosity", value="high", rc=rc)
+    if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
-      file=__FILE__, &
-      rcToReturn=rc)) &
+      file=__FILE__)) &
       return  ! bail out
 
     ! set the model clock
@@ -1528,7 +1319,7 @@ module esm_mod
       file=__FILE__)) &
       call ESMF_Finalize(endflag=ESMF_END_ABORT)
       
-    call ESMF_GridCompSet(gcomp, clock=internalClock, rc=rc)
+    call ESMF_GridCompSet(driver, clock=internalClock, rc=rc)
     if (ESMF_LogFoundError(rcToCheck=rc, msg=ESMF_LOGERR_PASSTHRU, &
       line=__LINE__, &
       file=__FILE__)) &
