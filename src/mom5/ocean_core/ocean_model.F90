@@ -535,6 +535,7 @@ private
   public ocean_model_end
   public update_ocean_model
   public get_ocean_domain
+  public get_ocean_grid
   public get_ocean_grid_size
   public ocean_public_type
   public ice_ocean_boundary_type
@@ -1880,6 +1881,22 @@ subroutine ocean_model_init(Ocean, Ocean_state, Time_init, Time_in)
   end subroutine update_ocean_model
 ! </SUBROUTINE> NAME="update_ocean_model"
 
+!#######################################################################
+! <SUBROUTINE NAME="get_ocean_grid">
+!
+! <DESCRIPTION>
+! Obtain the ocean grid.
+! </DESCRIPTION>
+!
+  subroutine get_ocean_grid(Gridp)
+
+    type(ocean_grid_type), pointer          :: Gridp
+
+    Gridp => Grid
+    return
+    
+  end subroutine get_ocean_grid
+! </SUBROUTINE> NAME="get_ocean_grid"
 
 
 !#######################################################################

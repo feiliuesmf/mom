@@ -25,10 +25,16 @@ echo "PATH: $PATH"
 echo "LD_LIBRARY_PATY: $LD_LIBRARY_PATH"
 echo ""
 
+setenv wd /home/Fei.Liu/github/mom
+
+#build the executable
+#cd $wd/exp
+#./MOM_compile.csh --platform zeus --type MOM_SIS --experiment MOM_SIS_BLING
+
 #run the executable
-#cd /home/Fei.Liu/MOM5/mom-5.0.2/exp
+#cd $wd/exp
 #./MOM_run.csh --platform zeus --type MOM_SIS --experiment MOM_SIS_BLING --npes 32
-cd /home/Fei.Liu/MOM5/mom-5.0.2/work/mom_sis
-/apps/mpt/2.05/bin/mpiexec_mpt -np 32 /home/Fei.Liu/MOM5/mom-5.0.2/exec/zeus/MOM_SIS/fms_MOM_SIS.x > fms.out
+cd $wd/work/MOM_SIS
+/apps/mpt/2.05/bin/mpiexec_mpt -np 32 $wd/exec/zeus/MOM_SIS/fms_MOM_SIS.x > fms.out
 
 EOF
