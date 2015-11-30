@@ -1,19 +1,22 @@
 #!/bin/csh -f
 # Minimal compile script for fully coupled model CM2M experiments
 
+
 set echo
 set platform      = gfortran   # A unique identifier for your platfo
                                   # This corresponds to the mkmf templates in $root/bin dir.
 set type          = MOM_solo      # Type of the experiment
 set help = 0
 
-set argv = (`getopt -u -o h -l type: -l platform:  -l help  --  $*`)
+set argv = (`getopt -u -o h -l type: -l platform: -l experiment: -l help  --  $*`)
 while ("$argv[1]" != "--")
     switch ($argv[1])
         case --type:
                 set type = $argv[2]; shift argv; breaksw
         case --platform:
                 set platform = $argv[2]; shift argv; breaksw
+        case --experiment:
+                set experiment = $argv[2]; shift argv; breaksw
         case --help:
                 set help = 1;  breaksw
         case -h:
@@ -66,11 +69,15 @@ endif
 #
 source $root/bin/environs.$platform  # environment variables and loadable modules
 
-
 #
 # compile mppnccombine.c, needed only if $npes > 1
   if ( ! -f $mppnccombine ) then
-    cc -O -o $mppnccombine -I/usr/local/include -L/usr/local/lib $code_dir/postprocessing/mppnccombine/mppnccombine.c -lnetcdf
+    if ($platform == wcoss) then
+      # works for ncdf3 and ncdf4
+      icc -O -o $mppnccombine -I/usr/local/include $NETCDF_CFLAGS -L/usr/local/lib $NETCDF_LDFLAGS $code_dir/postprocessing/mppnccombine/mppnccombine.c -lnetcdf
+    else
+      cc -O -o $mppnccombine -I/usr/local/include -L/usr/local/lib $code_dir/postprocessing/mppnccombine/mppnccombine.c -lnetcdf
+    endif
   endif
 
 set mkmf_lib = "$mkmf -f -m Makefile -a $code_dir -t $mkmfTemplate"

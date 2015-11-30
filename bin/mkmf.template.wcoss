@@ -15,7 +15,7 @@ REPRO =
 VERBOSE =
 OPENMP =
 
-MAKEFLAGS += --jobs=8
+MAKEFLAGS += --jobs=4
 
 FPPFLAGS := -fpp -Wp,-w
 
@@ -67,22 +67,32 @@ ifeq ($(NETCDF),3)
   endif
 endif
 
-ifneq ($(findstring netcdf-4.0.1,$(LOADEDMODULES)),)
+# ifneq ($(findstring netcdf-4.0.1,$(LOADEDMODULES)),)
+#   LIBS := -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz
+# else
+#   LIBS += -lnetcdf
+# endif
+
+ifneq ($(findstring NetCDF/4.2,$(LOADEDMODULES)),)
   LIBS := -lnetcdff -lnetcdf -lhdf5_hl -lhdf5 -lz
 else
   LIBS += -lnetcdf
 endif
 
-FFLAGS += -I/usrx/local/NetCDF/3.6.3/include
-CFLAGS += -I/usrx/local/NetCDF/3.6.3/include
-LIBS += -L/usrx/local/NetCDF/3.6.3/lib -lnetcdf_c++ -lnetcdf  -lmpi -lmpi++ -ldl
+# FFLAGS += -I/usrx/local/NetCDF/3.6.3/include
+# CFLAGS += -I/usrx/local/NetCDF/3.6.3/include
+# LIBS += -L/usrx/local/NetCDF/3.6.3/lib -lnetcdf_c++ -lnetcdf  -lmpi -lmpi++ -ldl
+
+FFLAGS += $(NETCDF_INCLUDE)
+CFLAGS += $(NETCDF_INCLUDE)
+LIBS   += $(NETCDF_LDFLAGS)
 
 # conditional compilation and linking with ESMF
 ifdef ESMFMKFILE
   ifneq ($(ESMFMKFILE),)
     include $(ESMFMKFILE)
-    FFLAGS += $(ESMF_F90COMPILEPATHS) -g -O0 -DUSE_ESMF_LIB
-    CFLAGS += $(ESMF_CXXCOMPILEPATHS) -g -O0
+    FFLAGS += $(ESMF_F90COMPILEPATHS) -DUSE_ESMF_LIB
+    CFLAGS += $(ESMF_CXXCOMPILEPATHS) 
     LIBS   += $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) $(ESMF_F90ESMFLINKLIBS)
   endif
 endif
@@ -116,67 +126,67 @@ TMPFILES = .*.m *.B *.L *.i *.i90 *.l *.s *.mod *.opt
 .SUFFIXES: .F .F90 .H .L .T .f .f90 .h .i .i90 .l .o .s .opt .x
 
 .f.L:
-  $(FC) $(FFLAGS) -c -listing $*.f
+	$(FC) $(FFLAGS) -c -listing $*.f
 .f.opt:
-  $(FC) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.f
+	$(FC) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.f
 .f.l:
-  $(FC) $(FFLAGS) -c $(LIST) $*.f
+	$(FC) $(FFLAGS) -c $(LIST) $*.f
 .f.T:
-  $(FC) $(FFLAGS) -c -cif $*.f
+	$(FC) $(FFLAGS) -c -cif $*.f
 .f.o:
-  $(FC) $(FFLAGS) -c $*.f
+	$(FC) $(FFLAGS) -c $*.f
 .f.s:
-  $(FC) $(FFLAGS) -S $*.f
+	$(FC) $(FFLAGS) -S $*.f
 .f.x:
-  $(FC) $(FFLAGS) -o $*.x $*.f *.o $(LDFLAGS)
+	$(FC) $(FFLAGS) -o $*.x $*.f *.o $(LDFLAGS)
 .f90.L:
-  $(FC) $(FFLAGS) -c -listing $*.f90
+	$(FC) $(FFLAGS) -c -listing $*.f90
 .f90.opt:
-  $(FC) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.f90
+	$(FC) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.f90
 .f90.l:
-  $(FC) $(FFLAGS) -c $(LIST) $*.f90
+	$(FC) $(FFLAGS) -c $(LIST) $*.f90
 .f90.T:
-  $(FC) $(FFLAGS) -c -cif $*.f90
+	$(FC) $(FFLAGS) -c -cif $*.f90
 .f90.o:
-  $(FC) $(FFLAGS) -c $*.f90
+	$(FC) $(FFLAGS) -c $*.f90
 .f90.s:
-  $(FC) $(FFLAGS) -c -S $*.f90
+	$(FC) $(FFLAGS) -c -S $*.f90
 .f90.x:
-  $(FC) $(FFLAGS) -o $*.x $*.f90 *.o $(LDFLAGS)
+	$(FC) $(FFLAGS) -o $*.x $*.f90 *.o $(LDFLAGS)
 .F.L:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -listing $*.F
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -listing $*.F
 .F.opt:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.F
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.F
 .F.l:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $(LIST) $*.F
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $(LIST) $*.F
 .F.T:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -cif $*.F
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -cif $*.F
 .F.f:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) -EP $*.F > $*.f
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -EP $*.F > $*.f
 .F.i:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) -P $*.F
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -P $*.F
 .F.o:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $*.F
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $*.F
 .F.s:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -S $*.F
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -S $*.F
 .F.x:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F *.o $(LDFLAGS)
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F *.o $(LDFLAGS)
 .F90.L:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -listing $*.F90
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -listing $*.F90
 .F90.opt:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.F90
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.F90
 .F90.l:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $(LIST) $*.F90
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $(LIST) $*.F90
 .F90.T:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -cif $*.F90
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -cif $*.F90
 .F90.f90:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) -EP $*.F90 > $*.f90
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -EP $*.F90 > $*.f90
 .F90.i90:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) -P $*.F90
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -P $*.F90
 .F90.o:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $*.F90
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $*.F90
 .F90.s:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -S $*.F90
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -S $*.F90
 .F90.x:
-  $(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F90 *.o $(LDFLAGS)
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F90 *.o $(LDFLAGS)
 

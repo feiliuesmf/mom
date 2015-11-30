@@ -147,8 +147,10 @@ int main(int argc, char *argv[])
         }
       else if (!strcmp(argv[a],"-64"))
         format=(NC_NOCLOBBER | NC_64BIT_OFFSET);
+#ifdef NC_NETCDF4
       else if (!strcmp(argv[a], "-n4"))
 	format=(NC_NOCLOBBER | NC_NETCDF4 | NC_CLASSIC_MODEL);
+#endif
       else if (!strcmp(argv[a],"-m")) missing=1;
       else
         {
