@@ -11,7 +11,7 @@ LD = ftn
 # flags #
 #########
 DEBUG =
-REPRO = 1
+REPRO =
 VERBOSE =
 OPENMP =
 
@@ -20,15 +20,15 @@ MAKEFLAGS += --jobs=1
 FPPFLAGS := -fpp -Wp,-w
 
 #FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -i_dynamic -assume byterecl -i4 -r8 -nowarn -g
-FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -shared-intel -assume byterecl -i4 -r8 -nowarn -xCORE-AVX2 -g 
-FFLAGS_OPT = -O2 -g -traceback
+FFLAGS := -fp-model precise -fno-alias -stack_temps -safe_cray_ptr -ftz -shared-intel -assume byterecl -i4 -r8 -nowarn -xCORE-AVX2 -g -traceback
+FFLAGS_OPT = -O2
 FFLAGS_REPRO = -fltconsistency
-FFLAGS_DEBUG = -O0 -check -check noarg_temp_created -check nopointer -warn -warn noerrors -debug variable_locations -fpe0 -traceback -ftrapuv 
+FFLAGS_DEBUG = -O0 -g -check -check noarg_temp_created -check nopointer -warn -warn noerrors -debug variable_locations -fpe0 -traceback -ftrapuv 
 FFLAGS_OPENMP = -openmp
 FFLAGS_VERBOSE = -v -V -what
 
 
-CFLAGS := -D__IFC -xCORE-AVX2
+CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -fp-model precise
 CFLAGS_OPT = -O2 -g -traceback
 CFLAGS_OPENMP = -openmp
 CFLAGS_REPRO = -fltconsistency
