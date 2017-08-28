@@ -11,7 +11,7 @@ LD = mpiifort
 # flags #
 #########
 DEBUG =
-REPRO = 1
+REPRO = 
 VERBOSE =
 OPENMP =
 
