@@ -52,7 +52,7 @@ FFLAGS_VERBOSE = -v -V -what
 # FAILED - forgot to change safe to strict CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -fp-model precise -fp-speculation=safe - retesting
 # FAILS CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -fp-model precise -fp-speculation=strict
 # WORKS CFLAGS := -D__IFC -g -traceback
-CFLAGS := -D__IFC -g -traceback -fp-model precise -align array32byte
+CFLAGS := -D__IFC -g -traceback -fp-model precise
 CFLAGS_OPT = -O2
 CFLAGS_OPENMP = -openmp
 CFLAGS_REPRO = -fltconsistency
