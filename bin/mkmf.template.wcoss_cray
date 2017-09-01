@@ -15,13 +15,29 @@ REPRO =
 VERBOSE =
 OPENMP = 
 
-MAKEFLAGS += --jobs=1
+MAKEFLAGS += --jobs=2
 
 FPPFLAGS := -fpp -Wp,-w
 
 #FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -i_dynamic -assume byterecl -i4 -r8 -nowarn -g
 #FFLAGS := -fp-model precise -fno-alias -stack_temps -safe_cray_ptr -ftz -shared-intel -assume byterecl -i4 -r8 -nowarn -xCORE-AVX2 -g -traceback
-FFLAGS := -fno-alias -safe_cray_ptr -assume byterecl -i4 -r8 -xCORE-AVX2 -g -traceback -fpe0 -ftrapuv
+# WORKS past 1050 FFLAGS := -fno-alias -safe_cray_ptr -assume byterecl -i4 -r8 -xCORE-AVX2 -g -traceback -fpe0 -ftrapuv
+# Need to test no fpe0 FFLAGS := -fno-alias -safe_cray_ptr -assume byterecl -i4 -r8 -xCORE-AVX2 -g -traceback -ftrapuv
+# WCOSS Setting: FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -i_dynamic -assume byterecl -i4 -r8 -nowarn -g
+# Testing WCOSS Settings
+# CRASHED at FH 828
+#FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -i_dynamic -assume byterecl -i4 -r8 -nowarn -g -traceback -xCORE-AVX2 -fp-model precise 
+# FAILED at FH 1050 FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -traceback -xCORE-AVX2 -fp-model precise -fp-speculation=safe
+# WORKS PAST 1050 FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -traceback -xCORE-AVX2 -fp-model precise -fpe0
+# FAILS at 1050 FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -traceback -xCORE-AVX2 -fp-model precise -fp-speculation=strict
+# WORKS FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -traceback 
+FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -traceback -fp-model precise -align array32byte
+
+# Crashes at 1050 FFLAGS := -fno-alias -safe_cray_ptr -assume byterecl -i4 -r8 -xCORE-AVX2 -g -traceback -fp-model precise -align array32byte
+
+# Testing ftz
+# CRASHES at 1050 FFLAGS := -fno-alias -safe_cray_ptr -assume byterecl -i4 -r8 -xCORE-AVX2 -g -traceback -fp-model precise -align array32byte -ftz
+
 FFLAGS_OPT = -O2
 FFLAGS_REPRO = -fltconsistency
 FFLAGS_DEBUG = -O0 -g -check -check noarg_temp_created -check nopointer -warn -warn noerrors -debug variable_locations -fpe0 -traceback -ftrapuv 
@@ -29,7 +45,14 @@ FFLAGS_OPENMP = -openmp
 FFLAGS_VERBOSE = -v -V -what
 
 
-CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -ftrapuv
+# WORKS past 1050 CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -ftrapuv
+# WCOSS settings CFLAGS := -D__IFC
+# CRASH at FH 1050 CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -fp-model precise -fp-speculation=safe
+# WOTKS PAST 1050 CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -fp-model precise -fpe0
+# FAILED - forgot to change safe to strict CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -fp-model precise -fp-speculation=safe - retesting
+# FAILS CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -fp-model precise -fp-speculation=strict
+# WORKS CFLAGS := -D__IFC -g -traceback
+CFLAGS := -D__IFC -g -traceback -fp-model precise -align array32byte
 CFLAGS_OPT = -O2
 CFLAGS_OPENMP = -openmp
 CFLAGS_REPRO = -fltconsistency
