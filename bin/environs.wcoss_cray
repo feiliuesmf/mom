@@ -1,0 +1,37 @@
+setenv NC_BLKSZ        64K 
+setenv FMS_ARCHIVE     /home/Fei.Liu/fms
+setenv PATH            ${PATH}:.
+
+set cppDefs  = ( "-Duse_libMPI -DUSE_OCEAN_BGC -DENABLE_ODA -DSPMD -DLAND_BND_TRACERS" )
+
+if($static) then
+  set cppDefs = "$cppDefs -DMOM_STATIC_ARRAYS -DNI_=360 -DNJ_=200 -DNK_=50 -DNI_LOCAL_=60 -DNJ_LOCAL_=50"
+endif
+
+if ( $type == EBM ) then
+  set cppDefs  = ( "-Duse_libMPI -DLAND_BND_TRACERS -DOVERLOAD_C8 -DOVERLOAD_C4 -DOVERLOAD_R4" )
+endif
+
+echo $NETCDF | grep "NetCDF/3."
+if ($? == 0) then
+  echo "NetCDF3 loaded"
+  set ncDefs  = ("-Duse_netCDF -Duse_netCDF3")
+endif
+
+echo $NETCDF | grep "NetCDF/4."
+if ($? == 0) then
+  echo "NetCDF4 loaded"
+  set ncDefs  = ("-Duse_netCDF")
+endif
+
+set cppDefs  = ("$cppDefs $ncDefs")
+
+setenv netcdf_inc_dir  "$NETCDF/include"
+setenv netcdf_lib_dir  "$NETCDF/lib"
+
+# setenv netcdf_lib_dir  "-L/usrx/local/NetCDF/3.6.3/intel/lib -lnetcdf_c++ -lnetcdf"
+# setenv netcdf3_inc_dir "/usrx/local/NetCDF/3.6.3/include"
+# setenv netcdf3_lib_dir "-L//usrx/local/NetCDF/3.6.3/lib -lnetcdf_c++ -lnetcdf"
+# setenv netcdf3_lib_dir "/usrx/local/NetCDF/3.6.3/lib"
+# setenv mpirunCommand   "mpirun.lsf"
+

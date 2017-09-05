@@ -1,0 +1,203 @@
+# template for the Intel fortran compiler
+# typical use with mkmf
+# mkmf -t template.ifc -c"-Duse_libMPI -Duse_netCDF" path_names /usr/local/include
+############
+# commands #
+############
+FC = ftn
+CC = cc
+LD = ftn
+#########
+# flags #
+#########
+DEBUG = 
+REPRO =
+VERBOSE =
+OPENMP = 
+
+MAKEFLAGS += --jobs=2
+
+FPPFLAGS := -fpp -Wp,-w
+
+#FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -i_dynamic -assume byterecl -i4 -r8 -nowarn -g
+#FFLAGS := -fp-model precise -fno-alias -stack_temps -safe_cray_ptr -ftz -shared-intel -assume byterecl -i4 -r8 -nowarn -xCORE-AVX2 -g -traceback
+# WORKS past 1050 FFLAGS := -fno-alias -safe_cray_ptr -assume byterecl -i4 -r8 -xCORE-AVX2 -g -traceback -fpe0 -ftrapuv
+# Need to test no fpe0 FFLAGS := -fno-alias -safe_cray_ptr -assume byterecl -i4 -r8 -xCORE-AVX2 -g -traceback -ftrapuv
+# WCOSS Setting: FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -i_dynamic -assume byterecl -i4 -r8 -nowarn -g
+# Testing WCOSS Settings
+# CRASHED at FH 828
+#FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -i_dynamic -assume byterecl -i4 -r8 -nowarn -g -traceback -xCORE-AVX2 -fp-model precise 
+# FAILED at FH 1050 FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -traceback -xCORE-AVX2 -fp-model precise -fp-speculation=safe
+# WORKS PAST 1050 FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -traceback -xCORE-AVX2 -fp-model precise -fpe0
+# FAILS at 1050 FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -traceback -xCORE-AVX2 -fp-model precise -fp-speculation=strict
+# WORKS FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -traceback 
+FFLAGS := -fno-alias -stack_temps -safe_cray_ptr -ftz -assume byterecl -i4 -r8 -nowarn -g -traceback -fp-model precise -align array32byte
+
+# Crashes at 1050 FFLAGS := -fno-alias -safe_cray_ptr -assume byterecl -i4 -r8 -xCORE-AVX2 -g -traceback -fp-model precise -align array32byte
+
+# Testing ftz
+# CRASHES at 1050 FFLAGS := -fno-alias -safe_cray_ptr -assume byterecl -i4 -r8 -xCORE-AVX2 -g -traceback -fp-model precise -align array32byte -ftz
+
+FFLAGS_OPT = -O2
+FFLAGS_REPRO = -fltconsistency
+FFLAGS_DEBUG = -O0 -g -check -check noarg_temp_created -check nopointer -warn -warn noerrors -debug variable_locations -fpe0 -traceback -ftrapuv 
+FFLAGS_OPENMP = -openmp
+FFLAGS_VERBOSE = -v -V -what
+
+
+# WORKS past 1050 CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -ftrapuv
+# WCOSS settings CFLAGS := -D__IFC
+# CRASH at FH 1050 CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -fp-model precise -fp-speculation=safe
+# WOTKS PAST 1050 CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -fp-model precise -fpe0
+# FAILED - forgot to change safe to strict CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -fp-model precise -fp-speculation=safe - retesting
+# FAILS CFLAGS := -D__IFC -xCORE-AVX2 -g -traceback -fp-model precise -fp-speculation=strict
+# WORKS CFLAGS := -D__IFC -g -traceback
+CFLAGS := -D__IFC -g -traceback -fp-model precise
+CFLAGS_OPT = -O2
+CFLAGS_OPENMP = -openmp
+CFLAGS_REPRO = -fltconsistency
+CFLAGS_DEBUG = -O0 -g -ftrapuv -traceback
+
+LDFLAGS :=
+LDFLAGS_OPENMP := -openmp
+LDFLAGS_VERBOSE := -Wl,-V,--verbose,-cref,-M
+
+ifneq ($(REPRO),)
+CFLAGS += $(CFLAGS_REPRO)
+FFLAGS += $(FFLAGS_REPRO)
+endif
+ifneq ($(DEBUG),)
+CFLAGS += $(CFLAGS_DEBUG)
+FFLAGS += $(FFLAGS_DEBUG)
+else
+CFLAGS += $(CFLAGS_OPT)
+FFLAGS += $(FFLAGS_OPT)
+endif
+
+ifneq ($(OPENMP),)
+CFLAGS += $(CFLAGS_OPENMP)
+FFLAGS += $(FFLAGS_OPENMP)
+LDFLAGS += $(LDFLAGS_OPENMP)
+endif
+
+ifneq ($(VERBOSE),)
+CFLAGS += $(CFLAGS_VERBOSE)
+FFLAGS += $(FFLAGS_VERBOSE)
+LDFLAGS += $(LDFLAGS_VERBOSE)
+endif
+
+ifeq ($(NETCDF),3)
+  # add the use_LARGEFILE cppdef
+  ifneq ($(findstring -Duse_netCDF,$(CPPDEFS)),)
+    CPPDEFS += -Duse_LARGEFILE
+  endif
+endif
+
+#LIBS += $(NETCDF_LDFLAGS) $(NETCDF_LDFLAGS_CXX) $(HDF5_LDFLAGS_C) $(HDF5_LDFLAGS_CXX) $(HDF5_LDFLAGS_F) -lz  
+LIBS += $(NETCDF_LDFLAGS) $(HDF5_LDFLAGS_C) $(HDF5_LDFLAGS_CXX) $(HDF5_LDFLAGS_F) -lz  
+
+FFLAGS += $(NETCDF_INCLUDE)
+CFLAGS += $(NETCDF_INCLUDE)
+
+# conditional compilation and linking with ESMF
+ifdef ESMFMKFILE
+  ifneq ($(ESMFMKFILE),)
+    include $(ESMFMKFILE)
+    FFLAGS += $(ESMF_F90COMPILEPATHS) -DUSE_ESMF_LIB
+    CFLAGS += $(ESMF_CXXCOMPILEPATHS) 
+    LIBS   += $(ESMF_F90LINKPATHS) $(ESMF_F90LINKRPATHS) $(ESMF_F90ESMFLINKLIBS)
+  endif
+endif
+
+LDFLAGS += $(LIBS)
+
+#---------------------------------------------------------------------------
+# you should never need to change any lines below.
+
+# see the MIPSPro F90 manual for more details on some of the file extensions
+# discussed here.
+# this makefile template recognizes fortran sourcefiles with extensions
+# .f, .f90, .F, .F90. Given a sourcefile <file>.<ext>, where <ext> is one of
+# the above, this provides a number of default actions:
+
+# make <file>.opt create an optimization report
+# make <file>.o   create an object file
+# make <file>.s   create an assembly listing
+# make <file>.x   create an executable file, assuming standalone
+#     source
+# make <file>.i   create a preprocessed file (for .F)
+# make <file>.i90 create a preprocessed file (for .F90)
+
+# The macro TMPFILES is provided to slate files like the above for removal.
+
+RM = rm -f
+SHELL = /bin/csh -f
+TMPFILES = .*.m *.B *.L *.i *.i90 *.l *.s *.mod *.opt
+
+.SUFFIXES: .F .F90 .H .L .T .f .f90 .h .i .i90 .l .o .s .opt .x
+
+.f.L:
+	$(FC) $(FFLAGS) -c -listing $*.f
+.f.opt:
+	$(FC) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.f
+.f.l:
+	$(FC) $(FFLAGS) -c $(LIST) $*.f
+.f.T:
+	$(FC) $(FFLAGS) -c -cif $*.f
+.f.o:
+	$(FC) $(FFLAGS) -c $*.f
+.f.s:
+	$(FC) $(FFLAGS) -S $*.f
+.f.x:
+	$(FC) $(FFLAGS) -o $*.x $*.f *.o $(LDFLAGS)
+.f90.L:
+	$(FC) $(FFLAGS) -c -listing $*.f90
+.f90.opt:
+	$(FC) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.f90
+.f90.l:
+	$(FC) $(FFLAGS) -c $(LIST) $*.f90
+.f90.T:
+	$(FC) $(FFLAGS) -c -cif $*.f90
+.f90.o:
+	$(FC) $(FFLAGS) -c $*.f90
+.f90.s:
+	$(FC) $(FFLAGS) -c -S $*.f90
+.f90.x:
+	$(FC) $(FFLAGS) -o $*.x $*.f90 *.o $(LDFLAGS)
+.F.L:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -listing $*.F
+.F.opt:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.F
+.F.l:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $(LIST) $*.F
+.F.T:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -cif $*.F
+.F.f:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -EP $*.F > $*.f
+.F.i:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -P $*.F
+.F.o:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $*.F
+.F.s:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -S $*.F
+.F.x:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F *.o $(LDFLAGS)
+.F90.L:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -listing $*.F90
+.F90.opt:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -opt_report_level max -opt_report_phase all -opt_report_file $*.opt $*.F90
+.F90.l:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $(LIST) $*.F90
+.F90.T:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -cif $*.F90
+.F90.f90:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -EP $*.F90 > $*.f90
+.F90.i90:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) -P $*.F90
+.F90.o:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c $*.F90
+.F90.s:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -c -S $*.F90
+.F90.x:
+	$(FC) $(CPPDEFS) $(FPPFLAGS) $(FFLAGS) -o $*.x $*.F90 *.o $(LDFLAGS)
+

@@ -66,6 +66,7 @@ endif
 
 #
 # Users must ensure the correct environment file exists for their platform.
+echo "In MOM_compile.csh - platform = $platform"
 #
 source $root/bin/environs.$platform  # environment variables and loadable modules
 
@@ -75,6 +76,10 @@ source $root/bin/environs.$platform  # environment variables and loadable module
     if ($platform == wcoss) then
       # works for ncdf3 and ncdf4
       icc -O -o $mppnccombine -I/usr/local/include $NETCDF_CFLAGS -L/usr/local/lib $NETCDF_LDFLAGS $code_dir/postprocessing/mppnccombine/mppnccombine.c -lnetcdf
+    else if ($platform == wcoss_cray) then
+      # works for ncdf3 and ncdf4
+      cc -O -o $mppnccombine $NETCDF_CFLAGS $code_dir/postprocessing/mppnccombine/mppnccombine.c $NETCDF_LDFLAGS $NETCDF_LDFLAGS_C $HDF5_LDFLAGS_C -lz
+
     else
       cc -O -o $mppnccombine -I/usr/local/include -L/usr/local/lib $code_dir/postprocessing/mppnccombine/mppnccombine.c -lnetcdf
     endif
